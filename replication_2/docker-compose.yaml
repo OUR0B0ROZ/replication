@@ -1,0 +1,37 @@
+version: '3.7'
+
+services:
+  master-db:
+    image: postgres:latest
+    container_name: master-db
+    environment:
+      POSTGRES_DB: master_db
+      POSTGRES_USER: master_user
+      POSTGRES_PASSWORD: master_password
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      POSTGRES_WAL_LEVEL: "replica"
+      POSTGRES_MAX_WAL_SENDERS: "10"
+      POSTGRES_WAL_KEEP_SEGMENTS: "32"
+      POSTGRES_SYNCHRONOUS_COMMIT_MODE: "on"
+      POSTGRES_SYNCHRONOUS_STANDBY_NAMES: "*"
+    volumes:
+      - ./data/master-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  slave-db:
+    image: postgres:latest
+    container_name: slave-db
+    environment:
+      POSTGRES_DB: slave_db
+      POSTGRES_USER: slave_user
+      POSTGRES_PASSWORD: slave_password
+    volumes:
+      - ./data/slave-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    command: ["postgres", "-c", "primary_conninfo=host=master-db user=replicant_user password=replicant_password"]
+
+volumes:
+  master-data:
+  slave-data:
